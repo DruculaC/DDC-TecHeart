@@ -158,7 +158,7 @@ void main(void)
 	
 	while(1)
 		{				
-      SCH_Dispatch_Tasks();
+      hSCH_Dispatch_Tasks();
 
 		if(idle_EN == 1)
 			{
@@ -166,8 +166,8 @@ void main(void)
 			idle_EN = 0;
 			PCON |= 0x02;			
 			}
-
-		// 主机被盗报警
+		
+			// 主机被盗报警
 		if(stolen_alarm_flag == 1)		
 			{
 			// 语音提示，马达振动
@@ -205,7 +205,6 @@ void main(void)
 			battery_stolen_EN = 0;
 			Moto_Vibration();         			
 			}
-		
 		
 //		sEOS_Go_To_Sleep();			
 		}  
@@ -302,7 +301,7 @@ void timer0() interrupt interrupt_timer_0_overflow
 	
 	if((transceiver_power_enable == 0)&&(match_button_flag6 == 0))
 		{
-		if(++receiver_EN_count > 250)
+		if(++receiver_EN_count > 20)
 			{
 			transceiver_power_enable = 1;
 			receiver_EN = 0;
@@ -315,7 +314,7 @@ void timer0() interrupt interrupt_timer_0_overflow
 	
 	if((transceiver_power_enable == 1)&&(match_button_flag6 == 0))
 		{		
-		if(++receiver_DisEN_count > 1000)
+		if(++receiver_DisEN_count > 1500)
 			{
 			transceiver_power_enable = 0;
 			UART_Send_Data_F(ComMode_1);

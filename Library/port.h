@@ -95,7 +95,12 @@ sbit press_open_button = P0^0;
 sbit match_button = P0^0;
 
 // P0.2, PIN25, 无线模块电源控制
+#ifdef F3
 sbit transceiver_power_enable = P0^2;
+#endif
+#ifdef F2
+sbit transceiver_power_enable = P2^4;
+#endif
 
 #endif
 											

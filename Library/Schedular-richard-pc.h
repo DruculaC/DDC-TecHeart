@@ -48,17 +48,21 @@ typedef data struct
 
    // Set to 1 if task is co-operative
    // Set to 0 if task is pre-emptive
-   tByte Co_op;     
+   tByte Co_op;  
+
+	// Times of the program process.
+	tByte Times;
    } sTaskH; 
 
 // ------ Public function prototypes -------------------------------
 
 // Core scheduler functions
 void  hSCH_Dispatch_Tasks(void);
-tByte hSCH_Add_Task(void (code *)(void), tWord, tWord, bit);  
+tByte hSCH_Add_Task(void (code *)(void), tWord, tWord, bit, tByte);  
 bit   hSCH_Delete_Task(tByte);
 void  hSCH_Report_Status(void);
-void  hSCH_Update(void);
+void hSCH_Update(void);
+void Delete_all_task(void);
 
 // ------ Public constants -----------------------------------------
 
@@ -66,7 +70,7 @@ void  hSCH_Update(void);
 // during the execution of the program
 //
 // MUST BE ADJUSTED FOR EACH NEW PROJECT
-#define hSCH_MAX_TASKS   (5)   
+#define hSCH_MAX_TASKS (5)   
  
 #endif
                               

@@ -160,7 +160,7 @@ void timer0() interrupt interrupt_timer_0_overflow
 	TH0 = timer0_8H;
 	TL0 = timer0_8L;
 
-   hSCH_Update();
+	hSCH_Update();
 	
 	// timer0 is 1ms ticket, count the time flow of timer0, then operate every 2s.
 	if(++timer0_count >= 2000)
@@ -174,7 +174,7 @@ void timer0() interrupt interrupt_timer_0_overflow
 		
 		CheckADC();
 		
-      ENsensor_After_CloseLock();
+		ENsensor_After_CloseLock();
 		
 		SelfLearn_Reset();
 		      
@@ -185,14 +185,14 @@ void timer0() interrupt interrupt_timer_0_overflow
 				{
 				load_battery_result = ADC_check_result;
 				verifybattery(load_battery_result);
-            Check_Motobattery_flag = 0;
+				Check_Motobattery_flag = 0;
 				}
 			}
 			
 		#ifdef WX
-		if(++slave_nearby_count > 3)
+		if(++slave_nearby_count > 30)
 			{
-			slave_nearby_count = 5;
+			slave_nearby_count = 35;
 			slave_nearby_actioned_flag = 0;
 			IDkey_flag = 0;
 			enable_sensor();
@@ -288,14 +288,15 @@ void timer0() interrupt interrupt_timer_0_overflow
 	if((key_rotate == 1)&&(key_rotated_on_flag == 0)&&(IDkey_flag == 1)&&(never_alarm == 0))		
 		{
 		disable_sensor();
-      
+		key_rotated_on_flag = 1;
+		slave_nearby_actioned_flag = 1;
+		
 		ID_speeched_flag = 0;
 		
 		IDkey_count = 0;
 		IDkey_flag = 0;
 		IDkey_certificated_times = 0;
-      slave_nearby_actioned_flag = 1;
-		ElecMotor_CW();
+		hSCH_Add_Task(ElecMotor_CW, 20, 0, 1);
 		slave_nearby_operation();
 		} 		
 				
@@ -307,7 +308,10 @@ void timer0() interrupt interrupt_timer_0_overflow
 			Delay_1ms();
 			if((key_rotate == 0)||(slave_nearby_actioned_flag == 0))
 				{
-				key_rotated_on_flag=0;
+				key_rotated_on_flag = 0;
+				
+				ElecMotor_ACW();
+
 				slave_away_operation();		
 				IDkey_speech_flash = 0;
 				ID_speeched_flag = 0;

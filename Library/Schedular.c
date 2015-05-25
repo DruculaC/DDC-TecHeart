@@ -34,7 +34,7 @@
 #include "Main.h"
 #include "Port.h"
 
-#include "Schedular.h"
+#include "schedular.h"
 
 // ------ Public variable definitions ------------------------------
 
@@ -281,63 +281,7 @@ void hSCH_Report_Status(void)
 #endif
    }
 
-/*-------------------------------------------------------------
-	hSCH_Update()
-	This is the scheduler ISR.  It is called at a rate 
-	determined by the timer settings in hSCH_Init().
-	This version is triggered by Timer 0 interrupts:
-	timer is manually reloaded.
---------------------------------------------------------------*/
-void hSCH_Update(void)
-	{
-   tByte Index;
-	for (Index = 0; Index < hSCH_MAX_TASKS; Index++)
-		{
-		// Check if there is a task at this location
-		if (hSCH_tasks_G[Index].pTask)
-			{
-			if (hSCH_tasks_G[Index].Delay == 0)
-				{
-				// The task is due to run
-				// 
-				if (hSCH_tasks_G[Index].Co_op)
-					{
-					// If it is a co-operative task, increment the RunMe flag
-					hSCH_tasks_G[Index].RunMe += 1;  
-					}
-				else
-					{
-					// If it is a pre-emptive task, run it IMMEDIATELY
-					(*hSCH_tasks_G[Index].pTask)();  // Run the task
 
-					hSCH_tasks_G[Index].RunMe -= 1;   // Reset / reduce RunMe flag
-
-					// Periodic tasks will be scheduled again (see below)
-					// - if this is a 'one shot' task, remove it from the array
-					if (hSCH_tasks_G[Index].Period == 0)
-						{
-						hSCH_tasks_G[Index].pTask  = 0;
-						}
-					}
-
-				if (hSCH_tasks_G[Index].Period)
-					{
-					// Schedule this periodic task to run again
-					hSCH_tasks_G[Index].Delay = hSCH_tasks_G[Index].Period;
-					}
-				}
-			else
-				{
-				// Not yet ready to run: just decrement the delay 
-				hSCH_tasks_G[Index].Delay -= 1;
-				}
-			}         
-		}	
-	}
-
-
-
-	
 /*------------------------------------------------------------------*-
 
   hSCH_Go_To_Sleep()
@@ -370,6 +314,62 @@ void hSCH_Go_To_Sleep()
    //PCON |= 0x20;    // Enter idle mode (#2)
    }
 
+
+
+/*-------------------------------------------------------------
+	hSCH_Update()
+	This is the scheduler ISR.  It is called at a rate 
+	determined by the timer settings in hSCH_Init().
+	This version is triggered by Timer 0 interrupts:
+	timer is manually reloaded.
+--------------------------------------------------------------*/
+void hSCH_Update(void)
+	{
+	tByte Index;
+	// NOTE: calculations are in *TICKS* (not milliseconds)
+	for (Index = 0; Index < hSCH_MAX_TASKS; Index++)
+		{
+		// Check if there is a task at this location
+		if (hSCH_tasks_G[Index].pTask)
+			{
+				if (hSCH_tasks_G[Index].Delay == 0)
+				{
+				// The task is due to run
+				// 
+				if (hSCH_tasks_G[Index].Co_op)
+				   {
+				   // If it is a co-operative task, increment the RunMe flag
+				   hSCH_tasks_G[Index].RunMe += 1;  
+				   }
+				else
+				   {
+				   // If it is a pre-emptive task, run it IMMEDIATELY
+				   (*hSCH_tasks_G[Index].pTask)();  // Run the task
+
+				   hSCH_tasks_G[Index].RunMe -= 1;   // Reset / reduce RunMe flag
+
+				   // Periodic tasks will be scheduled again (see below)
+				   // - if this is a 'one shot' task, remove it from the array
+				   if (hSCH_tasks_G[Index].Period == 0)
+					  {
+					  hSCH_tasks_G[Index].pTask  = 0;
+					  }
+				   }
+
+				if (hSCH_tasks_G[Index].Period)
+				   {
+				   // Schedule this periodic task to run again
+				   hSCH_tasks_G[Index].Delay = hSCH_tasks_G[Index].Period;
+				   }
+				}
+				else
+				{
+				// Not yet ready to run: just decrement the delay 
+				hSCH_tasks_G[Index].Delay -= 1;
+				}
+			}         
+		}	
+	}
 
 /*------------------------------------------------------------------*-
   ---- END OF FILE -------------------------------------------------

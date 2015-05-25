@@ -105,7 +105,6 @@ void ElecMotor_Delay(void)
 		Delay_500ms();
 		Delay_500ms();
 		Delay_500ms();
-		Delay_500ms();
 		#ifdef Suidongzha
 		Delay_500ms();
 		Delay_500ms();

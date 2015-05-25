@@ -13,6 +13,7 @@
 #include "delay.h"
 #include "ElecMotor.h"
 #include "communication.h"
+#include "schedular.h"
 
 /*------ private variable --------------------------*/
 bit enable_sensor_delayEN = 0;		// 延迟使能传感器的使能，不能即时使能传感器，需要过一段时间		
@@ -65,6 +66,8 @@ extern tByte raised_alarm_count;
 extern tByte Check_Motobattery_count;
 extern bit Check_Motobattery_flag;
 extern tWord load_battery_result;
+extern bit ID_speeched_flag;
+extern bit slave_nearby_actioned_flag;
 
 
 /*-----------------------------------------
@@ -74,7 +77,6 @@ extern tWord load_battery_result;
 ------------------------------------------*/
 void slave_away_operation(void)
 	{
-	ElecMotor_ACW();
 	
 	if(Silence_Flag == 0)
 		{
@@ -83,8 +85,8 @@ void slave_away_operation(void)
 		#ifdef Batterycheck
 		Check_Motobattery_flag = 1;
 		Check_Motobattery_count = 0;
-
 		#endif
+
 	   }
 	// enable_sensor();	
 	enable_sensor_delayEN = 1;
@@ -103,14 +105,20 @@ void slave_away_operation(void)
 ----------------------------------------------------------------------*/
 void slave_nearby_operation(void)
 	{
-    if(Silence_Flag == 0)
+	slave_nearby_actioned_flag = 1;
+	
+	ID_speeched_flag = 0;		
+	IDkey_count = 0;
+	IDkey_flag = 0;
+	IDkey_certificated_times = 0;		
+
+	if(Silence_Flag == 0)
 		{
 		open_lock_speech();
 		verifybattery(load_battery_result);
-		
+
 		key_rotate_on_speech();
 		}
-	key_rotated_on_flag = 1;
 	}
 
 /*------------------------------------------------------------------

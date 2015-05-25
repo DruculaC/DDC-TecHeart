@@ -199,8 +199,6 @@ void open_lock_speech(void)
 -----------------------------------------------------*/
 void close_lock_speech(void)
 	{
-	
-	
 	voice_EN = 1;
 	SC_Speech(16);  
 	Delay(60);

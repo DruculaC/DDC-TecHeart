@@ -15,7 +15,9 @@
 #define General
 
 // Define PCB board, such as Z2, Z3 etc.
-#define Z3           
+#define Z2
+
+#define F2
 
 // Define model.
 // ID, WX, 

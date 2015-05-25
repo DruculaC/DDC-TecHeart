@@ -14,10 +14,9 @@
 	GetADCResult(tByte ch)
 	assign the channel, to get the voltage
 ----------------------------------------------------*/
-
 tWord GetADCResult(tByte ch)
 	{
-	tByte DataL = 0;
+	tWord DataL = 0;
 	tWord DataH = 0;
 	// channel 5 is MIC voltage detection
 	if(ch == 5)
@@ -53,10 +52,10 @@ tWord GetADCResult(tByte ch)
 		AADR1 = 0;
 		AADR2 = 1;
 	                                                                  
-	   ADCCON1 |= 0x80;                                      
+		ADCCON1 |= 0x80;                                      
 		
 		ADCI = 0;                                       
-    	ADCS = 1;  
+		ADCS = 1;  
 		
 		DataL = ADCCON0;
 		DataL = DataL >> 6; 
@@ -66,8 +65,8 @@ tWord GetADCResult(tByte ch)
 
 		return DataH;
 		}
-		else
-			return 0;
+	else
+		return 0;
 	}
 
 /*---------------------------------------------------
