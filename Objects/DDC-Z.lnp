@@ -1,0 +1,10 @@
+".\Objects\STARTUP.obj",
+".\Objects\hSch51.obj",
+".\Objects\Timer.obj",
+".\Objects\PC_IO.obj",
+".\Objects\PC_IO_T1.obj",
+".\Objects\DDC-Z.obj",
+".\Objects\Elecmotor.obj",
+".\Objects\Button.obj" 
+TO ".\Objects\DDC-Z" 
+PRINT(".\Listings\DDC-Z.m51") RAMSIZE(256) 
