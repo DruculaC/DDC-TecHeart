@@ -1,156 +1,274 @@
-C51 COMPILER V9.54   ELECMOTOR                                                             08/01/2015 14:54:16 PAGE 1   
+C51 COMPILER V9.54   ELECMOTOR                                                             02/02/2016 10:30:48 PAGE 1   
 
 
 C51 COMPILER V9.54, COMPILATION OF MODULE ELECMOTOR
 OBJECT MODULE PLACED IN .\Objects\Elecmotor.obj
-COMPILER INVOKED BY: D:\Program Files (x86)\Keil_v5\C51\BIN\C51.EXE Elecmotor.c LARGE ROM(COMPACT) OPTIMIZE(8,SPEED) BRO
-                    -WSE DEBUG OBJECTEXTEND PRINT(.\Listings\Elecmotor.lst) TABS(3) OBJECT(.\Objects\Elecmotor.obj)
+COMPILER INVOKED BY: D:\Program Files (x86)\Keil_v5\C51\BIN\C51.EXE Elecmotor.c COMPACT ROM(COMPACT) OPTIMIZE(8,SPEED) B
+                    -ROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\Elecmotor.lst) TABS(3) OBJECT(.\Objects\Elecmotor.obj)
 
 line level    source
 
    1          /*------------------------------------------------------------------*-
-   2             A.C (v1.00)
+   2             Elecmotor.C (v1.00)
    3            ------------------------------------------------------------------
-   4             Simple switch interface code, with software debounce.
+   4             Control Electrical motor in password protected lock.
    5          
    6             COPYRIGHT
    7             ---------
-   8             This code is copyright (c) 2001 by Richard Zhang.
+   8             This code is copyright (c) 2015 by Richard Zhang.
    9          -*------------------------------------------------------------------*/
   10          
   11          #include "Main.h"
   12          #include "Port.h"
   13          
   14          #include "Elecmotor.h"
-  15          
-  16          // ------ Public variable definitions ------------------------------
-  17          
-  18          // ------ Public variable declarations -----------------------------
+  15          #include "Communication.h"
+  16          #include "Speech.h"
+  17          #include "UART.h"
+  18          #include "Function.h"
   19          
-  20          // ------ Private variables ----------------------------------------
-  21          // static bit LED_state_G;
-  22          tWord Rotate_time;
-  23          bit Rotate_CW_G;
-  24          
-  25          tByte Magnet_code[3];
-  26          bit Coding_G;
-  27          tByte Code_time = 0;
-  28          tByte Byte_Index = 0;
-  29          tByte Bit_Index = 0;
-  30           
-  31          // ------ Private constants ----------------------------------------
-  32          // SW_THRES must be > 1 for correct debounce behaviour
-  33          // #define SW_THRES (3)
-  34          
-  35          /*------------------------------------------------------------------*-
-  36            Elecmotor_Init()
-  37            Initialisation function for Electronic motor's lock.
-  38          -*------------------------------------------------------------------*/
-  39          void Elecmotor_Init(void)
-  40             {
-  41   1         MagnetCon1 = 1;
-  42   1         MagnetCon2 = 1;
-  43   1         Magnet_code[0] = CmdHead;
-  44   1         Magnet_code[1] = CmdAddress;
-  45   1         Magnet_code[2] = CmdMode1;
-  46   1         Coding_G = 0;
-  47   1         }
-  48          
-  49          /*------------------------------------------------------------------*-
-  50            Elecmotor_Init()
-  51            Initialisation function for Electronic motor's lock.
-  52          -*------------------------------------------------------------------*/
-  53          void Elecmotor_update(void)
-  54             {  
-C51 COMPILER V9.54   ELECMOTOR                                                             08/01/2015 14:54:16 PAGE 2   
+  20          // ------ Public variable definitions ------------------------------
+  21          bit Rotate_CW_G;     // Elecmotor CW rotated flag
+  22          
+  23          // ------ Public variable declarations -----------------------------
+  24          extern bit Key_switch_on_G;
+  25          extern bit Program_blocked_G;
+  26          extern tWord u16ADC;
+  27          extern tWord Battery_ADC_result;
+  28          extern bit ID_certificated_G;
+  29          extern bit Sensor_delay_EN;
+  30          extern bit Silent_mode_G;
+  31          extern tByte ID_certificated_count;
+  32          extern bit Vehicle_poweron_EN;
+  33          extern bit Auto_close_G;
+  34          extern tByte Auto_close_time;
+  35          
+  36          // ------ Private variables ----------------------------------------
+  37          tWord Rotate_time;      // Elapsed time for CW or ACW rotating.
+  38          tByte Magnet_code[3];   // Password code for electronical motor board.
+  39          tByte Code_time;        // Code time 10ms represents "1", 4ms for "0".
+  40          bit Coding_G;           // Flag for transmitting code to electronical motor.
+  41          tByte Byte_Index;       // Byte index of code, there is 3 bytes now.
+  42          tByte Bit_Index;        // Bit index of every byte, there is 8 bits per byte now.
+  43           
+  44          // ------ Private constants ----------------------------------------
+  45          
+  46          /*------------------------------------------------------------------*-
+  47            Elecmotor_Init()
+  48            Initialisation function for Electronic motor's lock.
+  49          -*------------------------------------------------------------------*/
+  50          void Elecmotor_Init(void)
+  51             {
+  52   1         // Stop elecmotor.
+  53   1         MagnetCon1 = 1;
+  54   1         MagnetCon2 = 1;
+C51 COMPILER V9.54   ELECMOTOR                                                             02/02/2016 10:30:48 PAGE 2   
 
-  55   1         if(Coding_G == 1)
-  56   1            {
-  57   2            if(MagnetCon2 == 0)
-  58   2               {
-  59   3               // whether msb is 1, if yes, maintain 10ms, if not maintain 4ms.
-  60   3               if((Magnet_code[Byte_Index] & 0x80) == 0x80)
-  61   3                  {
-  62   4                  Code_time += 1;
-  63   4                  if(Code_time >= 10)  // 5 tickets, about 10ms.
-  64   4                     {
-  65   5                     Code_time = 0;
-  66   5                     Bit_Index += 1;
-  67   5                     MagnetCon2 = 1;
-  68   5                     // move 1 bit to left.
-  69   5                     Magnet_code[Byte_Index] <<= 1;
-  70   5                     }
-  71   4                  }
-  72   3               else
-  73   3                  {
-  74   4                  Code_time += 1;
-  75   4                  if(Code_time >= 4)   // 2 tickets, about 4ms.
-  76   4                     {
-  77   5                     Code_time = 0;
-  78   5                     Bit_Index += 1;
-  79   5                     MagnetCon2 = 1;
-  80   5                     Magnet_code[Byte_Index] <<= 1;
-  81   5                     }     
-  82   4                  }
-  83   3               
-  84   3               if(Bit_Index >= 8)
-  85   3                  {
-  86   4                  Bit_Index = 0;
-  87   4                  Byte_Index += 1;
-  88   4                  if(Byte_Index > 2)
-  89   4                     {
-  90   5                     Byte_Index = 0;
-  91   5                     MagnetCon2 = 1;
-  92   5                     Coding_G = 0;
-  93   5                     }
-  94   4                  }        
+  55   1         
+  56   1         Bit_Index = 0;
+  57   1         Byte_Index = 0;
+  58   1         Rotate_time = 0;
+  59   1         
+  60   1         // Set OCP input mode 
+  61   1         P1M1 |= 0x04;
+  62   1         P1M2 &= 0xfb;
+  63   1         // Stop hall control when power up.
+  64   1         Hall_control = 1;
+  65   1         
+  66   1         // Initialize the password code.
+  67   1         Magnet_code[0] = Elecmotor_code_head;
+  68   1         Magnet_code[1] = Elecmotor_code_address;
+  69   1         Magnet_code[2] = Elecmotor_code_open;
+  70   1         Coding_G = 1;
+  71   1         
+  72   1         // Close the 12V power of Electronic motor's controller
+  73   1         Controller_lock = 1;
+  74   1         Elecdoor_lock = 0;
+  75   1         }
+  76          
+  77          /*------------------------------------------------------------------*-
+  78            Elecmotor_update()
+  79            1ms/tick, excute the electronical motor lock.
+  80          -*------------------------------------------------------------------*/
+  81          void Elecmotor_update(void)
+  82             {
+  83   1         // Instant broadcast "tick" voice before open lock.
+  84   1         Speech_s_update();
+  85   1         
+  86   1         // Detecting open lock condictions.
+  87   1         if((Key_switch_on_G == 1)&&(Rotate_CW_G == 0)&&(ID_certificated_G))
+  88   1            {
+  89   2            Program_blocked_G = 1;           // Block button detection
+  90   2            
+  91   2            // Send code to lock.
+  92   2            if(Coding_G == 1)
+  93   2               {
+  94   3               Elecmotor_coding();
   95   3               }
   96   2            else
   97   2               {
-  98   3               Code_time += 1;
-  99   3               if(Code_time >= 4)
- 100   3                  {
- 101   4                  Code_time = 0;
- 102   4                  MagnetCon2 = 0;
- 103   4                  }
- 104   3               }     
- 105   2            }
- 106   1         else
- 107   1            {
- 108   2            // if ratate CW, MagnetCon2 = 0, driving moto to turn CW.
- 109   2            if(Rotate_CW_G == 1)
- 110   2               {
- 111   3               MagnetCon1 = 1;
- 112   3               MagnetCon2 = 0;
- 113   3               }
- 114   2            else
- 115   2               {
- 116   3               MagnetCon1 = 0;
-C51 COMPILER V9.54   ELECMOTOR                                                             08/01/2015 14:54:16 PAGE 3   
+  98   3               MagnetCon1 = 1;
+  99   3               MagnetCon2 = 0;
+ 100   3      
+ 101   3               Rotate_time += 1;
+ 102   3               // First 2s, don't detect OCP.
+ 103   3               if(Rotate_time > 2000)  
+ 104   3                  {
+ 105   4                  // If time > 5s or OCP is triggered, stop opening lock operation.
+ 106   4                  if((Rotate_time >= 5000)||(OCP_detect == 1))
+ 107   4                     {
+ 108   5                     Rotate_time = 0;
+ 109   5                     Rotate_CW_G = 1;           
+ 110   5                     Program_blocked_G = 0;     // Detect button again. 
+ 111   5      
+ 112   5                     // Reset ID certification
+ 113   5                     ID_reset();
+ 114   5                     
+ 115   5                     // Stop CW rotation.
+ 116   5                     MagnetCon1 = 1;
+C51 COMPILER V9.54   ELECMOTOR                                                             02/02/2016 10:30:48 PAGE 3   
 
- 117   3               MagnetCon2 = 1;
- 118   3               }
- 119   2               
- 120   2            Rotate_time += 1; 
- 121   2            if(Rotate_time >= 5000)
- 122   2               {
- 123   3               Rotate_time = 0;
- 124   3               Rotate_CW_G = ~Rotate_CW_G;
- 125   3               }     
- 126   2            }  
- 127   1         }
- 128          
- 129          
- 130          /*------------------------------------------------------------------*-
- 131            ---- END OF FILE -------------------------------------------------
- 132          -*------------------------------------------------------------------*/
+ 117   5                     MagnetCon2 = 1;
+ 118   5      
+ 119   5                     // Whether in silient mode?
+ 120   5                     if(Silent_mode_G == 0)
+ 121   5                        Goto_speech(Open_lock);
+ 122   5      
+ 123   5                     // Turn on vehicle's power.
+ 124   5                     Vehicle_poweron_EN = 1;
+ 125   5      
+ 126   5                     Auto_close_time = 0;
+ 127   5                     Auto_close_G = 0;
+ 128   5                     
+ 129   5                     // Set the code again.
+ 130   5                     Magnet_code[0] = Elecmotor_code_head;
+ 131   5                     Magnet_code[1] = Elecmotor_code_address;
+ 132   5                     Magnet_code[2] = Elecmotor_code_open;
+ 133   5                     Coding_G = 1;
+ 134   5                     return;
+ 135   5                     }
+ 136   4                  }
+ 137   3               }
+ 138   2            }
+ 139   1            
+ 140   1         if(((Key_switch_on_G == 0)||(Auto_close_G))&&(Rotate_CW_G == 1))
+ 141   1            {
+ 142   2            Program_blocked_G = 1;
+ 143   2            
+ 144   2            // stop hall power before closing lock.
+ 145   2            Hall_control = 1;    
+ 146   2            Controller_lock = 1;
+ 147   2            Elecdoor_lock = 0;
+ 148   2            // Closing our lock.
+ 149   2            MagnetCon1 = 0;
+ 150   2            MagnetCon2 = 1;
+ 151   2      
+ 152   2            Rotate_time += 1;
+ 153   2            if(Rotate_time > 2000)     // First 2s, not detect OCP.
+ 154   2               {
+ 155   3               // if time > 5s or OCP is triggered, stop closing lock operation.
+ 156   3               if((Rotate_time >= 5000)||(OCP_detect == 1))
+ 157   3                  {
+ 158   4                  Rotate_time = 0;
+ 159   4                  Rotate_CW_G = 0;
+ 160   4                  Program_blocked_G = 0;
+ 161   4      
+ 162   4                  MagnetCon1 = 1;
+ 163   4                  MagnetCon2 = 1;
+ 164   4                  
+ 165   4                  // Reset ID certification and enable sensor detecting.
+ 166   4                  ID_reset();
+ 167   4                  Sensor_delay_EN = 1;
+ 168   4                  
+ 169   4                  // Take the battery sample after lock closed.
+ 170   4                  Battery_ADC_result = u16ADC;     
+ 171   4                  
+ 172   4                  // If in silent mode, don't broadcast close lock speech.
+ 173   4                  if(Silent_mode_G == 0)
+ 174   4                     Goto_speech(Close_lock);
+ 175   4                  
+ 176   4                  // Reset silent mode.
+ 177   4                  Silent_mode_G = 0;
+ 178   4                  
+C51 COMPILER V9.54   ELECMOTOR                                                             02/02/2016 10:30:48 PAGE 4   
+
+ 179   4                  ID_certificated_count = 0;
+ 180   4                  
+ 181   4                  Auto_close_time = 0;
+ 182   4                  Auto_close_G = 0;
+ 183   4                  return;
+ 184   4                  }     
+ 185   3               }
+ 186   2            }
+ 187   1         }
+ 188          
+ 189          /*------------------------------------------------------------------*-
+ 190            Elecmotor_coding()
+ 191            Initialisation function for Electronic motor's lock.
+ 192          -*------------------------------------------------------------------*/
+ 193          void Elecmotor_coding(void)
+ 194             {
+ 195   1         if(MagnetCon2 == 0)
+ 196   1            {
+ 197   2            // whether msb is 1, if yes, maintain 10ms, if not maintain 4ms.
+ 198   2            if((Magnet_code[Byte_Index] & 0x80) == 0x80)
+ 199   2               {
+ 200   3               Code_time += 1;
+ 201   3               if(Code_time >= 10)  // 10 tickets, about 10ms.
+ 202   3                  {
+ 203   4                  Code_time = 0;
+ 204   4                  Bit_Index += 1;
+ 205   4                  MagnetCon2 = 1;
+ 206   4                  // move 1 bit to left.
+ 207   4                  Magnet_code[Byte_Index] <<= 1;
+ 208   4                  }
+ 209   3               }
+ 210   2            else
+ 211   2               {
+ 212   3               Code_time += 1;
+ 213   3               if(Code_time >= 4)   // 2 tickets, about 4ms.
+ 214   3                  {
+ 215   4                  Code_time = 0;
+ 216   4                  Bit_Index += 1;
+ 217   4                  MagnetCon2 = 1;
+ 218   4                  Magnet_code[Byte_Index] <<= 1;
+ 219   4                  }     
+ 220   3               }
+ 221   2            
+ 222   2            if(Bit_Index >= 8)
+ 223   2               {
+ 224   3               Bit_Index = 0;
+ 225   3               Byte_Index += 1;
+ 226   3               if(Byte_Index > 2)
+ 227   3                  {
+ 228   4                  Byte_Index = 0;
+ 229   4                  MagnetCon2 = 1;
+ 230   4                  Coding_G = 0;
+ 231   4                  }
+ 232   3               }
+ 233   2            }
+ 234   1         else
+ 235   1            {
+ 236   2            Code_time += 1;
+ 237   2            if(Code_time >= 4)
+ 238   2               {
+ 239   3               Code_time = 0;
+ 240   3               MagnetCon2 = 0;
+C51 COMPILER V9.54   ELECMOTOR                                                             02/02/2016 10:30:48 PAGE 5   
+
+ 241   3               }
+ 242   2            }        
+ 243   1         }
+ 244          /*------------------------------------------------------------------*-
+ 245            ---- END OF FILE -------------------------------------------------
+ 246          -*------------------------------------------------------------------*/
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =    218    ----
+   CODE SIZE        =    382    ----
    CONSTANT SIZE    =   ----    ----
-   XDATA SIZE       =      8    ----
-   PDATA SIZE       =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =      8    ----
    DATA SIZE        =   ----    ----
    IDATA SIZE       =   ----    ----
    BIT SIZE         =      2    ----

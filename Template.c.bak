@@ -11,10 +11,12 @@
 #include "Main.h"
 #include "Port.h"
 
-#include "A.h"
+#include "Template.h"
 
 // ------ Public variable definitions ------------------------------
 bit Sw_pressed_G = 0; // The current switch status
+
+// ------ Public variable declarations -----------------------------
 
 // ------ Private variables ----------------------------------------
 static bit LED_state_G;
@@ -22,8 +24,6 @@ static bit LED_state_G;
 // ------ Private constants ----------------------------------------
 // SW_THRES must be > 1 for correct debounce behaviour
 #define SW_THRES (3)
-
-
 
 /*------------------------------------------------------------------*-
   SWITCH_Init()

@@ -1,0 +1,107 @@
+C51 COMPILER V9.54   FUNCTION_S                                                            02/02/2016 10:30:50 PAGE 1   
+
+
+C51 COMPILER V9.54, COMPILATION OF MODULE FUNCTION_S
+OBJECT MODULE PLACED IN .\Objects\Function-S.obj
+COMPILER INVOKED BY: D:\Program Files (x86)\Keil_v5\C51\BIN\C51.EXE Function-S.c COMPACT ROM(COMPACT) OPTIMIZE(8,SPEED) 
+                    -BROWSE DEBUG OBJECTEXTEND PRINT(.\Listings\Function-S.lst) TABS(3) OBJECT(.\Objects\Function-S.obj)
+
+line level    source
+
+   1          /*------------------------------------------------------------------*-
+   2             A.C (v1.00)
+   3            ------------------------------------------------------------------
+   4             Simple switch interface code, with software debounce.
+   5          
+   6             COPYRIGHT
+   7             ---------
+   8             This code is copyright (c) 2001 by Richard Zhang.
+   9          -*------------------------------------------------------------------*/
+  10          
+  11          #include "Main.h"
+  12          #include "Port.h"
+  13          
+  14          #include "Function-S.h"
+  15          #include "ISP_DataFlash.h"
+  16          #include "Speech.h"
+  17          #include "Selflearn.h"
+  18          #include "Protection.h"
+  19          
+  20          // ------ Public variable definitions ------------------------------
+  21          bit Vehicle_poweron_EN;    // Enable flag for vehicle's sorts of power.
+  22          
+  23          // ------ Public variable declarations -----------------------------
+  24          
+  25          // ------ Private variables ----------------------------------------
+  26          tWord Vehicle_poweron_time;   // Delay time of vehicle's power on.
+  27          
+  28          // ------ Private constants ----------------------------------------
+  29          
+  30          /*------------------------------------------------------------------*-
+  31            Self_learn_Init()
+  32            Initialisation function for the switch library.
+  33          -*------------------------------------------------------------------*/
+  34          void Function_s_update(void)
+  35             {
+  36   1         Selflearn_detection();
+  37   1         Self_learn_action();
+  38   1         
+  39   1         Protection_Vibration_detection();
+  40   1         
+  41   1         Vehicle_poweron_detection();
+  42   1         }
+  43          
+  44          /*------------------------------------------------------------------*-
+  45            Vehicle_poweron_detection()
+  46            Initialisation function for the switch library.
+  47          -*------------------------------------------------------------------*/
+  48          void Vehicle_poweron_detection(void)
+  49             {
+  50   1         if(Vehicle_poweron_EN)
+  51   1            {
+  52   2            Vehicle_poweron_time += 1;
+  53   2            if(Vehicle_poweron_time > 2000)
+  54   2               {
+C51 COMPILER V9.54   FUNCTION_S                                                            02/02/2016 10:30:50 PAGE 2   
+
+  55   3               Vehicle_poweron_time = 0;
+  56   3               // Turn on electrical vehicle's sorts of power.
+  57   3               Hall_control = 0;
+  58   3               Controller_lock = 0;
+  59   3               Elecdoor_lock = 1;
+  60   3               Vehicle_poweron_EN = 0; 
+  61   3               }
+  62   2            }
+  63   1         }
+  64          
+  65          /*------------------------------------------------------------------*-
+  66            Function_S_init()
+  67            Initialisation function for the switch library.
+  68          -*------------------------------------------------------------------*/
+  69          void Function_S_init(void)
+  70             {
+  71   1         Selflearn_Init();
+  72   1         Protection_init();
+  73   1         
+  74   1         Vehicle_poweron_EN = 0;
+  75   1         Vehicle_poweron_time = 0;
+  76   1         }
+  77          
+  78          
+  79          /*------------------------------------------------------------------*-
+  80            ---- END OF FILE -------------------------------------------------
+  81          -*------------------------------------------------------------------*/
+
+
+MODULE INFORMATION:   STATIC OVERLAYABLE
+   CODE SIZE        =     65    ----
+   CONSTANT SIZE    =   ----    ----
+   XDATA SIZE       =   ----    ----
+   PDATA SIZE       =      2    ----
+   DATA SIZE        =   ----    ----
+   IDATA SIZE       =   ----    ----
+   BIT SIZE         =      1    ----
+END OF MODULE INFORMATION.
+
+
+C51 COMPILATION COMPLETE.  0 WARNING(S),  0 ERROR(S)

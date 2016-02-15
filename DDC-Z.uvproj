@@ -185,7 +185,7 @@
         </Utilities>
         <Target51>
           <Target51Misc>
-            <MemoryModel>2</MemoryModel>
+            <MemoryModel>1</MemoryModel>
             <RTOS>0</RTOS>
             <RomSize>1</RomSize>
             <DataHold>0</DataHold>
@@ -379,16 +379,6 @@
               <FilePath>.\Timer.c</FilePath>
             </File>
             <File>
-              <FileName>PC_IO.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\PC_IO.c</FilePath>
-            </File>
-            <File>
-              <FileName>PC_IO_T1.c</FileName>
-              <FileType>1</FileType>
-              <FilePath>.\PC_IO_T1.c</FilePath>
-            </File>
-            <File>
               <FileName>DDC-Z.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\DDC-Z.c</FilePath>
@@ -402,6 +392,66 @@
               <FileName>Button.c</FileName>
               <FileType>1</FileType>
               <FilePath>.\Button.c</FilePath>
+            </File>
+            <File>
+              <FileName>UART.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\UART.c</FilePath>
+            </File>
+            <File>
+              <FileName>Communication.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Communication.c</FilePath>
+            </File>
+            <File>
+              <FileName>Speech.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Speech.c</FilePath>
+            </File>
+            <File>
+              <FileName>Delay.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Delay.c</FilePath>
+            </File>
+            <File>
+              <FileName>Battery.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Battery.c</FilePath>
+            </File>
+            <File>
+              <FileName>Sensor.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Sensor.c</FilePath>
+            </File>
+            <File>
+              <FileName>Alarm.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Alarm.c</FilePath>
+            </File>
+            <File>
+              <FileName>Function.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Function.c</FilePath>
+            </File>
+            <File>
+              <FileName>Function-S.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Function-S.c</FilePath>
+            </File>
+            <File>
+              <FileName>Selflearn.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Selflearn.c</FilePath>
+            </File>
+            <File>
+              <FileName>ISP_DataFlash.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\ISP_DataFlash.c</FilePath>
+            </File>
+            <File>
+              <FileName>Protection.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>.\Protection.c</FilePath>
             </File>
           </Files>
         </Group>

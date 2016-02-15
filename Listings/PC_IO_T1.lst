@@ -1,4 +1,4 @@
-C51 COMPILER V9.54   PC_IO_T1                                                              08/01/2015 14:54:16 PAGE 1   
+C51 COMPILER V9.54   PC_IO_T1                                                              08/12/2015 13:42:34 PAGE 1   
 
 
 C51 COMPILER V9.54, COMPILATION OF MODULE PC_IO_T1
@@ -62,7 +62,7 @@ line level    source
   52   1         //  Variable baud rate (asynchronous)
   53   1         //  Receive flag will only be set if a valid stop bit is received
   54   1         //  Set TI (transmit buffer is empty)
-C51 COMPILER V9.54   PC_IO_T1                                                              08/01/2015 14:54:16 PAGE 2   
+C51 COMPILER V9.54   PC_IO_T1                                                              08/12/2015 13:42:34 PAGE 2   
 
   55   1         SCON = 0x72;
   56   1      

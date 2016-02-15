@@ -17,7 +17,7 @@
 bit Sw_pressed_G = 0; // The current switch status
 
 // ------ Public variable declarations -----------------------------
-
+//extern bit xx;
 // ------ Private variables ----------------------------------------
 static bit LED_state_G;
 

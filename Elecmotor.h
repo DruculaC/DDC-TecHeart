@@ -12,13 +12,14 @@
 // ------ Public constants -----------------------------------------
 // #define BARGRAPH_MAX (255)
 // #define BARGRAPH_MIN (0)
-#define CmdHead 0xc8
-#define CmdAddress 0xe0
-#define CmdMode1 0xc1
+#define Elecmotor_code_head 0xc8
+#define Elecmotor_code_address 0xe0
+#define Elecmotor_code_open 0xc1
 
 // ------ Public function prototypes -------------------------------
 void Elecmotor_Init(void);
 void Elecmotor_update(void);
+void Elecmotor_coding(void);
 
 /*------------------------------------------------------------------*-
   ---- END OF FILE -------------------------------------------------

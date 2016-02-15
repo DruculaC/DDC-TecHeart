@@ -11,9 +11,7 @@
 
 //-----public function prototype----------------------
 
-void InitTimer(const tByte Tick_ms_T0, Tick_us_T1);
-void sEOS_Go_To_Sleep();
-void InitT0(const tByte Tick_ms_T0);
+void Timer0_Init(const tWord Tick_ms_T0);
 void hSCH_Manual_Timer0_Reload();
 void hSCH_Start(void);
 

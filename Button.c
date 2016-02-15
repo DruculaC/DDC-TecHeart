@@ -1,29 +1,33 @@
 /*------------------------------------------------------------------*-
-   A.C (v1.00)
+   Button.C (v1.00)
   ------------------------------------------------------------------
-   Simple switch interface code, with software debounce.
+   Motor key button detecting for motor vehicle.
 
    COPYRIGHT
    ---------
-   This code is copyright (c) 2001 by Richard Zhang.
+   This code is copyright (c) 2015 by Richard Zhang.
 -*------------------------------------------------------------------*/
 
 #include "Main.h"
 #include "Port.h"
 
 #include "Button.h"
+#include "Elecmotor.h"
 
 // ------ Public variable definitions ------------------------------
-// bit Sw_pressed_G = 0; // The current switch status
+bit Key_switch_on_G;		// Flag for motor key turned on.
+
+bit Program_blocked_G;	// When excuting program, block detecting button.
 
 // ------ Public variable declarations -----------------------------
+extern tByte Magnet_code[3];
+extern bit Vibration_G_elecmotor;
 
 // ------ Private variables ----------------------------------------
-// static bit LED_state_G;
 
 // ------ Private constants ----------------------------------------
-// SW_THRES must be > 1 for correct debounce behaviour
-// #define SW_THRES (3)
+tByte Key_switch_on_time;		// Time of motor's key turning on.
+tByte Key_switch_off_time;		// Time of motor's key turning off.
 
 /*------------------------------------------------------------------*-
   Button_Init()
@@ -32,16 +36,51 @@
 void Button_Init(void)
    {
    Key_switch = 1;	// Use this pin for input
-   }
+   Key_switch_on_time = 0;
+	}
 
 /*------------------------------------------------------------------*-
-  Button_update()
-  Initialisation function for the switch library.
+	Button_update()
+	Update motor's key button, 1 for open, 0 for close, 100ms/ticket
 -*------------------------------------------------------------------*/
 void Button_update(void)
    {
-   Key_switch = 1;	
-   }
+	// If other program is excuting or speeching, block detecting the button status.
+	if((Program_blocked_G)||(Speech_EN))
+		return;
+		
+	// if Key = high, it means motor key is turn on.
+	if(Key_switch == 1)
+		{		
+		// Detect 5 times for debounce.
+		Key_switch_on_time += 1;
+		if(Key_switch_on_time > 5)
+			{
+			Key_switch_on_time = 5;
+			// Set the flag.
+			Key_switch_on_G = 1;			
+			return;
+			}
+		
+		Key_switch_off_time = 0;
+		return;
+		}
+	// If Key_switch not turn on, then reset the time.
+	Key_switch_on_time = 0;
+
+	// If motor has not been vibrated in 5s, detecting motor key turn off state.
+	if(!Vibration_G_elecmotor)
+		{
+		// Detect 15 times for debounce, about 1.5s.
+		Key_switch_off_time += 1;
+		if(Key_switch_off_time > 15)
+			{
+			Key_switch_off_time = 15;
+			// Reset the flag.
+			Key_switch_on_G = 0;
+			}
+		}
+	}
 
 /*------------------------------------------------------------------*-
   ---- END OF FILE -------------------------------------------------

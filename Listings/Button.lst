@@ -1,73 +1,112 @@
-C51 COMPILER V9.54   BUTTON                                                                08/01/2015 14:54:16 PAGE 1   
+C51 COMPILER V9.54   BUTTON                                                                02/02/2016 10:30:51 PAGE 1   
 
 
 C51 COMPILER V9.54, COMPILATION OF MODULE BUTTON
 OBJECT MODULE PLACED IN .\Objects\Button.obj
-COMPILER INVOKED BY: D:\Program Files (x86)\Keil_v5\C51\BIN\C51.EXE Button.c LARGE ROM(COMPACT) OPTIMIZE(8,SPEED) BROWSE
-                    - DEBUG OBJECTEXTEND PRINT(.\Listings\Button.lst) TABS(3) OBJECT(.\Objects\Button.obj)
+COMPILER INVOKED BY: D:\Program Files (x86)\Keil_v5\C51\BIN\C51.EXE Button.c COMPACT ROM(COMPACT) OPTIMIZE(8,SPEED) BROW
+                    -SE DEBUG OBJECTEXTEND PRINT(.\Listings\Button.lst) TABS(3) OBJECT(.\Objects\Button.obj)
 
 line level    source
 
    1          /*------------------------------------------------------------------*-
-   2             A.C (v1.00)
+   2             Button.C (v1.00)
    3            ------------------------------------------------------------------
-   4             Simple switch interface code, with software debounce.
+   4             Motor key button detecting for motor vehicle.
    5          
    6             COPYRIGHT
    7             ---------
-   8             This code is copyright (c) 2001 by Richard Zhang.
+   8             This code is copyright (c) 2015 by Richard Zhang.
    9          -*------------------------------------------------------------------*/
   10          
   11          #include "Main.h"
   12          #include "Port.h"
   13          
   14          #include "Button.h"
-  15          
-  16          // ------ Public variable definitions ------------------------------
-  17          // bit Sw_pressed_G = 0; // The current switch status
-  18          
-  19          // ------ Public variable declarations -----------------------------
-  20          
-  21          // ------ Private variables ----------------------------------------
-  22          // static bit LED_state_G;
-  23          
-  24          // ------ Private constants ----------------------------------------
-  25          // SW_THRES must be > 1 for correct debounce behaviour
-  26          // #define SW_THRES (3)
+  15          #include "Elecmotor.h"
+  16          
+  17          // ------ Public variable definitions ------------------------------
+  18          bit Key_switch_on_G;    // Flag for motor key turned on.
+  19          
+  20          bit Program_blocked_G;  // When excuting program, block detecting button.
+  21          
+  22          // ------ Public variable declarations -----------------------------
+  23          extern tByte Magnet_code[3];
+  24          extern bit Vibration_G_elecmotor;
+  25          
+  26          // ------ Private variables ----------------------------------------
   27          
-  28          /*------------------------------------------------------------------*-
-  29            Button_Init()
-  30            Initialisation function for the switch library.
-  31          -*------------------------------------------------------------------*/
-  32          void Button_Init(void)
-  33             {
-  34   1         Key_switch = 1;   // Use this pin for input
-  35   1         }
-  36          
-  37          /*------------------------------------------------------------------*-
-  38            Button_update()
-  39            Initialisation function for the switch library.
-  40          -*------------------------------------------------------------------*/
-  41          void Button_update(void)
-  42             {
-  43   1         Key_switch = 1;   
-  44   1         }
-  45          
-  46          /*------------------------------------------------------------------*-
-  47            ---- END OF FILE -------------------------------------------------
-  48          -*------------------------------------------------------------------*/
+  28          // ------ Private constants ----------------------------------------
+  29          tByte Key_switch_on_time;     // Time of motor's key turning on.
+  30          tByte Key_switch_off_time;    // Time of motor's key turning off.
+  31          
+  32          /*------------------------------------------------------------------*-
+  33            Button_Init()
+  34            Initialisation function for the switch library.
+  35          -*------------------------------------------------------------------*/
+  36          void Button_Init(void)
+  37             {
+  38   1         Key_switch = 1;   // Use this pin for input
+  39   1         Key_switch_on_time = 0;
+  40   1         }
+  41          
+  42          /*------------------------------------------------------------------*-
+  43             Button_update()
+  44             Update motor's key button, 1 for open, 0 for close, 100ms/ticket
+  45          -*------------------------------------------------------------------*/
+  46          void Button_update(void)
+  47             {
+  48   1         // If other program is excuting or speeching, block detecting the button status.
+  49   1         if((Program_blocked_G)||(Speech_EN))
+  50   1            return;
+  51   1            
+  52   1         // if Key = high, it means motor key is turn on.
+  53   1         if(Key_switch == 1)
+  54   1            {     
+C51 COMPILER V9.54   BUTTON                                                                02/02/2016 10:30:51 PAGE 2   
+
+  55   2            // Detect 5 times for debounce.
+  56   2            Key_switch_on_time += 1;
+  57   2            if(Key_switch_on_time > 5)
+  58   2               {
+  59   3               Key_switch_on_time = 5;
+  60   3               // Set the flag.
+  61   3               Key_switch_on_G = 1;       
+  62   3               return;
+  63   3               }
+  64   2            
+  65   2            Key_switch_off_time = 0;
+  66   2            return;
+  67   2            }
+  68   1         // If Key_switch not turn on, then reset the time.
+  69   1         Key_switch_on_time = 0;
+  70   1      
+  71   1         // If motor has not been vibrated in 5s, detecting motor key turn off state.
+  72   1         if(!Vibration_G_elecmotor)
+  73   1            {
+  74   2            // Detect 15 times for debounce, about 1.5s.
+  75   2            Key_switch_off_time += 1;
+  76   2            if(Key_switch_off_time > 15)
+  77   2               {
+  78   3               Key_switch_off_time = 15;
+  79   3               // Reset the flag.
+  80   3               Key_switch_on_G = 0;
+  81   3               }
+  82   2            }
+  83   1         }
+  84          
+  85          /*------------------------------------------------------------------*-
+  86            ---- END OF FILE -------------------------------------------------
+  87          -*------------------------------------------------------------------*/
 
 
 MODULE INFORMATION:   STATIC OVERLAYABLE
-   CODE SIZE        =      6    ----
+   CODE SIZE        =     61    ----
    CONSTANT SIZE    =   ----    ----
    XDATA SIZE       =   ----    ----
-C51 COMPILER V9.54   BUTTON                                                                08/01/2015 14:54:16 PAGE 2   
-
-   PDATA SIZE       =   ----    ----
+   PDATA SIZE       =      2    ----
    DATA SIZE        =   ----    ----
    IDATA SIZE       =   ----    ----
-   BIT SIZE         =   ----    ----
+   BIT SIZE         =      2    ----
 END OF MODULE INFORMATION.
 
 
